@@ -6,8 +6,13 @@ from flask import Flask
 import threading
 import signal
 import sys
+import os
 
 # Bot configuration
+TOKEN = os.getenv("TOKEN")  # Ensure the variable name matches the one set in Render
+if not BOT_TOKEN:
+    print("Error: TOKEN is not defined")
+    
 CHANNEL_ID = '@easymatchwin'
 
 app = Flask(__name__)
