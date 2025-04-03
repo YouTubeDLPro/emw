@@ -8,7 +8,6 @@ import signal
 import sys
 
 # Bot configuration
-TOKEN = '8008864717:AAGIRxMCi8xa7LfAfweCKopqGG77aO2S2ps'
 CHANNEL_ID = '@easymatchwin'
 
 app = Flask(__name__)
