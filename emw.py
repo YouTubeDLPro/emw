@@ -10,7 +10,7 @@ import os
 
 # Bot configuration
 TOKEN = os.getenv("TOKEN")  # Ensure the variable name matches the one set in Render
-if not BOT_TOKEN:
+if not TOKEN:
     print("Error: TOKEN is not defined")
     
 CHANNEL_ID = '@easymatchwin'
