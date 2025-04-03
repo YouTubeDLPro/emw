@@ -9,9 +9,15 @@ import sys
 import os
 
 # Bot configuration
-TOKEN = os.getenv("TOKEN")  # Ensure the variable name matches the one set in Render
+TOKEN = os.getenv("TOKEN")
 if not TOKEN:
     print("Error: TOKEN is not defined")
+    sys.exit(1)
+
+PASS = os.getenv("PASS")
+if not PASS:
+    print("Error: PASS is not defined")
+    sys.exit(1)
     
 CHANNEL_ID = '@easymatchwin'
 
@@ -93,6 +99,11 @@ async def handle_text(update: Update, context):
         await update.message.reply_text("Please start with /betting_signal")
         return
 
+    # Check if we're awaiting password
+    if "awaiting_password" in user_data[user_id]:
+        await handle_password(update, context)
+        return
+
     current_step = user_data[user_id]["step"]
     step_key, _ = steps[current_step]
 
@@ -113,9 +124,9 @@ async def handle_text(update: Update, context):
         return
 
     user_data[user_id]["data"][step_key] = text
-    user_data[user_id]["step"] += 1
-
-    if user_data[user_id]["step"] < len(steps):
+    
+    if current_step == len(steps) - 1 and "data" in user_data[user_id] and len(user_data[user_id]["data"]) < len(steps):
+        user_data[user_id]["step"] += 1
         next_step_key, next_prompt = steps[user_data[user_id]["step"]]
         await update.message.reply_text(next_prompt)
     else:
@@ -139,9 +150,9 @@ async def handle_photo(update: Update, context):
         return
 
     user_data[user_id]["data"][step_key] = update.message.photo[-1].file_id
-    user_data[user_id]["step"] += 1
-
-    if user_data[user_id]["step"] < len(steps):
+    
+    if current_step == len(steps) - 1 and "data" in user_data[user_id] and len(user_data[user_id]["data"]) < len(steps):
+        user_data[user_id]["step"] += 1
         next_step_key, next_prompt = steps[user_data[user_id]["step"]]
         await update.message.reply_text(next_prompt)
     else:
@@ -170,9 +181,10 @@ async def handle_callback(update: Update, context):
     query = update.callback_query
     user_id = query.from_user.id
     if query.data == "confirm":
-        logging.info(f"User {user_id} confirmed the signal.")
-        await send_betting_signal(user_id, context)
-        await query.answer("Betting signal sent successfully!")
+        logging.info(f"User {user_id} confirmed the signal, awaiting password.")
+        user_data[user_id]["awaiting_password"] = True
+        await context.bot.send_message(chat_id=user_id, text="Please enter the password to post to the channel:")
+        await query.answer()
     elif query.data == "edit":
         logging.info(f"User {user_id} chose to edit.")
         await show_edit_options(user_id, context)
@@ -189,6 +201,21 @@ async def handle_callback(update: Update, context):
         step_key, prompt = steps[step_index]
         await context.bot.send_message(chat_id=user_id, text=f"Editing {step_key}. {prompt}")
         await query.answer()
+
+async def handle_password(update: Update, context):
+    user_id = update.message.from_user.id
+    if user_id not in user_data or "awaiting_password" not in user_data[user_id]:
+        await update.message.reply_text("Please start with /betting_signal")
+        return
+
+    entered_password = update.message.text
+    if entered_password == PASS:
+        logging.info(f"User {user_id} entered correct password.")
+        await send_betting_signal(user_id, context)
+        await context.bot.send_message(chat_id=user_id, text="Betting signal sent successfully!")
+    else:
+        logging.info(f"User {user_id} entered incorrect password.")
+        await update.message.reply_text("Incorrect password. Please try again:")
 
 async def show_edit_options(user_id, context):
     keyboard = [
@@ -228,7 +255,6 @@ Good Luck and Bet Smart! 🍀
     )
     logging.info(f"User {user_id} sent the betting signal.")
     del user_data[user_id]
-    await context.bot.send_message(chat_id=user_id, text="Signal has been sent to the channel.")
 
 def signal_handler(sig, frame):
     global running
@@ -255,6 +281,7 @@ def main():
     telegram_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     telegram_app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     telegram_app.add_handler(CallbackQueryHandler(handle_callback))
+    telegram_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_password))
     
     logging.info("Starting Telegram bot polling...")
     telegram_app.run_polling()
