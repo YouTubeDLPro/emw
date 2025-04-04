@@ -6,16 +6,15 @@ from flask import Flask
 import threading
 import signal
 import sys
+from dotenv import load_dotenv
 import os
 
-# Load ADMIN_ID from Render's environment variable
-ADMIN_ID = int(os.getenv("ADMIN_ID"))  # Default to 0 if not set
+# Load environment variables from .env file
+load_dotenv()
 
-# Load TOKEN from environment variable
-TOKEN = os.getenv("TOKEN")
-if not TOKEN:
-    print("Error: TOKEN is not defined")
-    sys.exit(1)
+# Load ADMIN_ID and TOKEN from .env file
+ADMIN_ID = {int(os.getenv('ADMIN_ID'))}  # Convert to int and wrap in set
+TOKEN = os.getenv('TOKEN')
     
 CHANNEL_ID = '@easymatchwin'
 CHANNEL_URL = "https://t.me/easymatchwin"
