@@ -74,7 +74,7 @@ async def start_command(update: Update, context):
         return
     user = update.message.from_user
     user_id = user.id
-    if user_id not in ADMIN_IDS:
+    if user_id not in ADMIN_ID:
         username = user.username or user.first_name
         message = (
             f"👋 *Welcome, {username}, to Easy Match Win!* 👋\n\n"
@@ -103,7 +103,7 @@ async def betting_signal(update: Update, context):
         return
     user = update.message.from_user
     user_id = user.id
-    if user_id not in ADMIN_IDS:
+    if user_id not in ADMIN_ID:
         username = user.username or user.first_name
         message = (
             f"👋 *Hey {username}, Ready to Win Big?* 👋\n\n"
@@ -320,4 +320,4 @@ def main():
         threading.Event().wait(1)
 
 if __name__ == "__main__":
-    main()
+    main(
