@@ -6,6 +6,7 @@ from flask import Flask
 import threading
 import signal
 import sys
+import os
 
 # Load ADMIN_ID from Render's environment variable
 ADMIN_ID = int(os.getenv("ADMIN_ID"))  # Default to 0 if not set
