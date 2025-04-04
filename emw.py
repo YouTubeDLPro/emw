@@ -320,4 +320,4 @@ def main():
         threading.Event().wait(1)
 
 if __name__ == "__main__":
-    main(
+    main()
